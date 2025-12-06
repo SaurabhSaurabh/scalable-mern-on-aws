@@ -1,111 +1,83 @@
-# scalable-mern-on-aws
-Deployment of the TravelMemory MERN application on AWS EC2 with Nginx reverse proxy, load balancing, and Cloudflare domain integration for scalability and resilience.
-
-# TravelMemory MERN deployment on AWS EC2 with ALB and Cloudflare
-
-## Problem statement
-**Goal:** Deploy the MERN-based TravelMemory app to AWS EC2, ensure frontend–backend communication, scale via an AWS Load Balancer, and expose a custom domain through Cloudflare with secure and resilient architecture.
-
-**Introduction:**
-
-The Travel Memory application has been developed using the MERN stack. Your challenge is to deploy this application on an Amazon EC2 instance. This will provide you with hands-on experience in deploying full-stack applications, working with cloud platforms, and ensuring scalable architecture.
-
-**Project Repository:**
-
-Access the complete codebase of the TravelMemory application from the provided GitHub link: https://github.com/UnpredictablePrashant/TravelMemory
-
-**Objective:**
-
-- Set up the backend running on Node.js.
-
-- Configure the front end designed with React.
-
-- Ensure efficient communication between the front end and back end.
-
-- Deploy the full application on an EC2 instance.
-
-- Facilitate load balancing by creating multiple instances of the application.
-
-- Connect a custom domain through Cloudflare.
-
- **Tasks:**
-
-1. Backend Configuration:
-
-- Clone the repository and navigate to the backend directory.
-
-- The backend runs on port 3000. Set up a reverse proxy using nginx to ensure smooth deployment on EC2.
-
-- Update the .env file to incorporate database connection details and port information.
-
-2. Frontend and Backend Connection:
-
-- Navigate to the `urls.js` in the frontend directory.
-
- - Update the file to ensure the front end communicates effectively with the backend.
-
-3. Scaling the Application:
-
-- Create multiple instances of both the frontend and backend servers.
-
-- Add these instances to a load balancer to ensure efficient distribution of incoming traffic.
-
-4. Domain Setup with Cloudflare:
-
-- Connect your custom domain to the application using Cloudflare.
-
-- Create a CNAME record pointing to the load balancer endpoint.
-
-- Set up an A record with the IP address of the EC2 instance hosting the front end.
-
-5. Documentation:
-
-- Prepare comprehensive documentation detailing each step of the deployment process. Include relevant screenshots to make the process clear and reproducible.
-
-- Design a deployment architecture diagram using [draw.io](https://www.draw.io/) to visualize the flow and connections.
-
-**Expected Deliverables:**
-
-1. A fully functional Travel Memory application hosted on an EC2 instance, accessible via a custom domain.
-
-2. Detailed documentation of the deployment process with appropriate screenshots.
-
-3. A deployment architecture diagram.
+# 📦 scalable-mern-on-aws
+Deployment of the **TravelMemory MERN application** on AWS EC2 with Nginx reverse proxy, load balancing, and Cloudflare domain integration for scalability and resilience.
 
 ---
 
-## Steps to resolve
+# 🌍 TravelMemory MERN Deployment on AWS EC2 with ALB and Cloudflare
+
+## 📝 Problem Statement
+**Goal:** Deploy the MERN-based TravelMemory app to AWS EC2, ensure frontend–backend communication, scale via an AWS Load Balancer, and expose a custom domain through Cloudflare with secure and resilient architecture.
+
+### 🔎 Introduction
+The TravelMemory application has been developed using the MERN stack. Your challenge is to deploy this application on an Amazon EC2 instance. This will provide hands-on experience in deploying full-stack applications, working with cloud platforms, and ensuring scalable architecture.
+
+### 📂 Project Repository
+Access the complete codebase:  
+👉 [TravelMemory GitHub Repository](https://github.com/UnpredictablePrashant/TravelMemory)
+
+### 🎯 Objectives
+- Set up the backend running on Node.js.  
+- Configure the frontend designed with React.  
+- Ensure efficient communication between frontend and backend.  
+- Deploy the full application on EC2.  
+- Facilitate load balancing with multiple instances.  
+- Connect a custom domain through Cloudflare.  
+
+---
+
+## 🛠️ Tasks
+1. **Backend Configuration**  
+   - Clone repo → backend directory.  
+   - Backend runs on port 3000 → configure Nginx reverse proxy.  
+   - Update `.env` with DB connection + port info.  
+
+2. **Frontend & Backend Connection**  
+   - Update `urls.js` in frontend to point to backend.  
+
+3. **Scaling the Application**  
+   - Create multiple frontend/backend instances.  
+   - Add them to a load balancer.  
+
+4. **Domain Setup with Cloudflare**  
+   - CNAME → Load balancer endpoint.  
+   - A record → EC2 frontend IP.  
+
+5. **Documentation**  
+   - Detailed step-by-step guide with screenshots.  
+   - Deployment architecture diagram via [draw.io](https://www.draw.io/).  
+
+---
+
+## 🚀 Steps to Resolve
 
 ### 1️⃣ Provision EC2 and Install Prerequisites
-
 #### 🖥️ Operating System & Packages
-- Ubuntu 22.04 LTS
-- Nginx
-- Node.js (v18 LTS)
-- PM2
-- Git
+- Ubuntu 22.04 LTS  
+- Nginx  
+- Node.js (v22 LTS)  
+- PM2  
+- Git  
 
-#### 🌐 Network Configuration
-Security Group must allow:
-| Port | Purpose        |
-|------|----------------|
-| 22   | SSH            |
-| 80   | HTTP           |
-| 443  | HTTPS          |
-| 3000 | Frontend (React) |
-| 3001 | Backend (Node.js) |
+#### 🌐 Security Group Configuration
+| Port | Purpose            |
+|------|--------------------|
+| 22   | SSH                |
+| 80   | HTTP               |
+| 443  | HTTPS              |
+| 3000 | Frontend (React)   |
+| 3001 | Backend (Node.js)  |
 
 #### 📋 Steps
-1. Log into **AWS Management Console** → EC2 Dashboard → **Launch Instance**.  
+1. Log into **AWS Management Console** → EC2 Dashboard → Launch Instance.  
 2. Select **Ubuntu Server 20.04 LTS** (Free tier eligible).  
 3. Choose instance type: `t2.micro`.  
 4. Configure default VPC + public subnet.  
 5. Allocate storage (default 8 GB).  
-6. Configure **Security Group** with ports listed above.  
+6. Configure Security Group with ports above.  
 7. Launch with a key pair for SSH access.  
 
-```
-# Example SSH command to connect
+```bash
+# Example SSH command
 ssh -i your-key.pem ubuntu@EC2_PUBLIC_IP
 ```
 > Screenshot: EC2 instance list  
@@ -113,7 +85,7 @@ ssh -i your-key.pem ubuntu@EC2_PUBLIC_IP
 
 ---
 
-### 2. Update EC2 and Install Node.js 22
+### 2️⃣ Update EC2 and Install Node.js 22
 SSH into your instance:
 ```bash
 ssh -i your-key.pem ubuntu@EC2_PUBLIC_IP
@@ -135,35 +107,38 @@ Screenshot: Node.js and npm versions
 
 ---
 
-### 3. Configure MongoDB Atlas
-Sign in to MongoDB Atlas.
+### 3️⃣ Configure MongoDB Atlas
 
-Create a free-tier cluster (M0) on AWS in your nearest region.
+1. Sign in to MongoDB Atlas.
 
-Add Database User with read/write privileges.
+2. Create a free-tier cluster (M0) on AWS in your nearest region.
 
-Configure Network Access: Allow from Anywhere (0.0.0.0/0) or restrict to EC2 IP.
+3. Add Database User with read/write privileges.
 
-Download and install MongoDB Compass.
+4. Configure Network Access: Allow from Anywhere (0.0.0.0/0) or restrict to EC2 IP.
 
-Connect using URI:
+5. Download and install MongoDB Compass.
+
+6. Connect using URI:
 ```
 mongodb+srv://<username>:<password>@cluster0.mongodb.net/travelmemory?retryWrites=true&w=majority
 ```
 
-Create database travelmemory and collection trips.
+7. Create database travelmemory and collection trips.
 
-Screenshot: Atlas cluster dashboard Screenshot: Compass showing travelmemory database
+Screenshot: Atlas cluster dashboard 
+Screenshot: Compass showing travelmemory database
 
 ---
 
-### 4. Deploy Backend Application
+### 4️⃣ Deploy Backend Application
 
 Clone the repository:
 ```
 git clone https://github.com/UnpredictablePrashant/TravelMemory.git
 cd TravelMemory/backend
 ```
+
 Create .env file:
 ```
 MONGO_URI='mongodb+srv://<username>:<password>@cluster0.mongodb.net/travelmemory?retryWrites=true&w=majority'
@@ -171,10 +146,14 @@ PORT=3001
 JWT_SECRET=<your_secret>
 CLIENT_ORIGIN=http://EC2_PUBLIC_IP:3000
 ```
-Install dependencies: ``` npm install ```  
-Run backend server: ```node index.js ```   
-Test API endpoint: ```http://EC2_PUBLIC_IP:3001/hello```   
+Install dependencies: 
+``` npm install ```  
 
+Run backend server: 
+```node index.js ```
+
+Test API endpoint: 
+```http://EC2_PUBLIC_IP:3001/hello```   
 
 ** Expected output: ** Hello World
 
@@ -182,7 +161,7 @@ Screenshot: .env file (redacted) Screenshot: Browser showing Hello World
 
 ---
 
-### 5. Deploy Frontend Application
+### 5️⃣ Deploy Frontend Application
 Navigate to frontend folder:
 ```cd TravelMemory/frontend```
 
@@ -202,19 +181,18 @@ Screenshot: Frontend homepage in browser
 
 ---
 
-### 6. Next Steps (Production Deployment)
+### 6️⃣ Next Steps (Production Deployment)
 
-Nginx Reverse Proxy: Serve React build (npm run build) and proxy backend requests.
+1. Nginx Reverse Proxy: Serve React build (npm run build) + proxy backend requests.
 
-Load Balancer: Create AWS Application Load Balancer, register multiple EC2 instances, configure health checks (/hello).
+2. Load Balancer: Create AWS Application Load Balancer, register multiple EC2 instances, configure health checks (/hello).
 
-Cloudflare DNS:
+3. Cloudflare DNS:
+      - CNAME api.yourdomain.com → ALB DNS name.
 
-CNAME api.yourdomain.com → ALB DNS name.
+      - A record yourdomain.com → EC2 public IP (or frontend ALB).
 
-A record yourdomain.com → EC2 public IP (or frontend ALB).
-
-TLS Certificates: Use AWS ACM + Cloudflare Full/Strict mode.
+4. TLS Certificates: Use AWS ACM + Cloudflare Full/Strict mode.
 
 Screenshot: ALB target group health check Screenshot: Cloudflare DNS records
 
