@@ -26,7 +26,7 @@ Key highlights:
 ---
 
 ## 🏗 Architecture
-![Architecture Diagram](path-to-diagram)  
+![Scalable MERN on AWS Architecture](screenshots/scalable-mern-on-aws-architecture.png)
 
 **Flow of the application:**  
 - End user opens browser → hits `https://www.yourdomain.com`  
@@ -39,7 +39,7 @@ Key highlights:
 - Response flows back: MongoDB → Backend → Backend ALB → Frontend → Browser  
 
 > [!NOTE]  
-> Architecture diagram can be reused from [draw.io resources](https://github.com/vikramhemchandar/draw.io)
+> Architecture diagram can be reused from [draw.io resources](https://github.com/SaurabhSaurabh/scalable-mern-on-aws/tree/main/drawio-resources/scalable-MERN-on-AWS-architecture.io)
 
 ---
 
@@ -56,7 +56,8 @@ Key highlights:
 - Auto-assign public IP: Enabled  
 - Security group: allow SSH, HTTP, HTTPS, ports 3000 & 3001  
 
-📸 *[Screenshot Placeholder: EC2 instance creation]*  
+📸 *[Screenshot : EC2 instance creation]*  
+![ec2-backend-instance-launch](screenshots/ec2-backend-instance-launch.png)
 
 ---
 
