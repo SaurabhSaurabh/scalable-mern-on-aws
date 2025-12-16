@@ -122,17 +122,16 @@ sudo systemctl reload nginx
 
 ---
 
-### 4. Create AMI Image
+### 4. Create AMI Image(optional)
 - Navigate to EC2 → Actions → Image and templates → Create image  
-📸 *[Screenshot Placeholder: AMI creation]*  
+📸 *[Screenshot : AMI creation]*  
+![ec2-ami](screenshots/aws-ec2-image.png)
 
 ---
 
-### 5. Scale EC2 Instances
-- Create 3 EC2 instances from AMI (total 4: 2 backend, 2 frontend)  
-- For now, create 2 backend instances  
-
-📸 *[Screenshot Placeholder: EC2 scaling]*  
+### 5. Scale EC2 Instances (optional)
+- Create 1 or more EC2 instances from AMI 
+- For now, create 1 more backend instances  
 
 ---
 
@@ -155,17 +154,21 @@ npm -v
 - Access `http://<public-ip>/` → should display backend message  
 - Access `http://<public-ip>/hello` → should return **Hello World**  
 
-📸 *[Screenshot Placeholder: Backend verification]*  
+📸 *[Screenshot: Backend verification]*  
+![backend](screenshots/backend-access-through-public-ip.png)
 
 ---
 
 ### 8. Create SSL Certificate with ACM
 - Navigate to **AWS Certificate Manager (ACM)**  
-- Request public certificate for domain(s)  
-- Add CNAME records in DNS provider (Cloudflare/Namecheap)  
+- Request public certificate for domain(s)
+- It will navigate to a page where it will have CNAME name and CNAME value  
+- Add CNAME records in DNS provider (Cloudflare/Namecheap)
 - Wait until ACM shows status as **Issued**  
+📸 *[Screenshot: ACM certificate request & validation]*  
+![acm-certificate-backend](screenshots/acm-request-certificate.png)
 
-📸 *[Screenshot Placeholder: ACM certificate request & validation]*  
+![acm-certificate-backend](screenshots/acm-backend.png)
 
 ---
 
@@ -184,10 +187,12 @@ npm -v
 - SSL Certificate: ACM-issued certificate  
 - Forward traffic to backend target group  
 
-📸 *[Screenshot Placeholder: Backend ALB creation]*  
+📸 *[Screenshot : Backend ALB creation]*  
 
 **Test:**  
-- Access `https://<backend-alb-dns>/hello` → should return **Hello World**  
+- Access `https://<backend-alb-dns>/hello` → should return **Hello World**
+
+![backend-access-through-alb](screenshots/backend-access-through-alb.png)
 
 **DNS Mapping:**  
 - Add CNAME record in Cloudflare:  
@@ -195,20 +200,19 @@ npm -v
   - Host: `backend`  
   - Value: `<backend-alb-dns>`  
 
-📸 *[Screenshot Placeholder: Cloudflare DNS entry]*  
+📸 *[Screenshot : Cloudflare DNS entry]*  
+![CLOUDFLARE](screenshots/cloudflare-cname-entries.png)
 
 **Backend is now accessible at:**  
 `https://backend.yourdomain.com`
-
----
-Got it 👍 — here’s the **Frontend Deployment section** polished and formatted to match the backend style we already completed.  
+![backend](screenshots/backend-access-thorugh-domain.png)
 
 ---
 
 ## 🎨 Frontend Configuration
 
 ### 1. Provision EC2 Instances
-- Launch **2 EC2 instances** for frontend using the AMI created earlier  
+- Launch **1 EC2 instance** for frontend
 - Configuration:  
   - OS: Ubuntu  
   - AMI: Select the custom AMI with pre-installed dependencies  
@@ -217,7 +221,10 @@ Got it 👍 — here’s the **Frontend Deployment section** polished and format
   - Auto-assign public IP: Enabled  
   - Security group: allow SSH, HTTP, HTTPS, ports 3000 & 3001  
 
-📸 *[Screenshot Placeholder: Frontend EC2 creation]*  
+Clone repository:
+```bash
+git clone https://github.com/UnpredictablePrashant/TravelMemory
+```
 
 ---
 
@@ -228,37 +235,90 @@ Got it 👍 — here’s the **Frontend Deployment section** polished and format
 ```js
 export const baseUrl = process.env.REACT_APP_BACKEND_URL || "https://backend.yourdomain.com";
 ```
-
-📸 *[Screenshot Placeholder: url.js configuration]*  
+Example - export const baseUrl = process.env.REACT_APP_BACKEND_URL || "https://backend.saurabhsuman.online";
 
 ---
 
 ### 3. Install NPM & Start Frontend
 Run commands on both frontend EC2 instances:
 
-```bash
+```
 cd TravelMemory/frontend
 sudo npm install
-npm start
+sudo npm run build # create optimized production build
 ```
 
 Verify versions:
-```bash
+```
 node -v
 npm -v
 ```
 
-📸 *[Screenshot Placeholder: Frontend npm start]*  
+Copy Build Files to Web Directory:
+```
+sudo mkdir -p /var/www/frontend
+sudo cp -r ~/TravelMemory/frontend/build/* /var/www/frontend/
+```
+
+Set ownership and permissions:
+```
+sudo chown -R www-data:www-data /var/www/frontend
+sudo chmod -R 755 /var/www/frontend
+```
+
+Configure Nginx:
+```
+Edit /etc/nginx/sites-available/default:
+
+server {
+    listen 80;
+    server_name saurabhsuman.online www.saurabhsuman.online;
+
+    root /var/www/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+```
+
+Explanation:
+
+    root → points to the React build folder.
+
+    try_files $uri /index.html; → ensures React routing works (fallback to index.html).
+
+    server_name _; → allows Nginx to respond to ALB DNS (*.elb.amazonaws.com).
+
+
+Reload nginx:
+```
+sudo nginx -t        # test config for syntax errors
+sudo systemctl reload nginx
+```
+
+Verify locally:
+```
+curl -I http://localhost
+```
+Expected output:  
+```HTTP/1.1 200 OK```
+
 
 ---
 
 ### 4. Create SSL Certificate with ACM
 - Navigate to **AWS Certificate Manager (ACM)**  
-- Request public certificate for `www.yourdomain.com`  
+- Request public certificate for `www.yourdomain.com`
+- It will navigate to a page where it will have CNAME name and CNAME value  
 - Add CNAME records in DNS provider (Cloudflare/Namecheap)  
 - Wait until ACM shows status as **Issued**  
 
-📸 *[Screenshot Placeholder: ACM certificate for frontend]*  
+📸 *[Screenshot : ACM certificate for frontend]*  
+
+![acm](screenshots/acm-frontend.png)
+
 
 ---
 
@@ -277,10 +337,12 @@ npm -v
 - SSL Certificate: ACM-issued certificate  
 - Forward traffic to frontend target group  
 
-📸 *[Screenshot Placeholder: Frontend ALB creation]*  
+📸 *[Screenshot : Frontend ALB creation]*  
 
 **Test:**  
 - Access `https://<frontend-alb-dns>` → should load React app homepage  
+
+![frontend](screenshots/frontend-access-through-alb.png)
 
 ---
 
@@ -290,11 +352,11 @@ npm -v
   - Host: `www`  
   - Value: `<frontend-alb-dns>`  
 
-📸 *[Screenshot Placeholder: Cloudflare DNS entry for frontend]*  
+📸 *[Screenshot: Cloudflare DNS entry for frontend]*  
+![cloudflare-dns-entries](screenshots/cloudflare-cname-entries.png)
 
 **Frontend is now accessible at:**  
 `https://www.yourdomain.com`
-
----
-
-✅ Congratulations this completes the **Frontend Deployment section**.  
+  
+![www.saurabhsuman.online-add-trip](screenshots/www.saurabhsuman.online-addtrip.png)
+![www.saurabhsuman.online](screenshots/www.saurabhsuman.online.png)
