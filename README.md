@@ -1,292 +1,299 @@
-# 📦 scalable-mern-on-aws
-Deployment of the **TravelMemory MERN application** on AWS EC2 with Nginx reverse proxy, load balancing, and Cloudflare domain integration for scalability and resilience.
+# 🚀 Scalable MERN Deployment on AWS
+
+A complete guide to deploying a **MERN (MongoDB, Express.js, React, Node.js)** application on **AWS EC2** with **Nginx reverse proxy**, **Application Load Balancers**, and **Cloudflare DNS integration**.  
+This project demonstrates **DevOps best practices** for scalability, security, and high availability.
 
 ---
 
-# 🌍 TravelMemory MERN Deployment on AWS EC2 with ALB and Cloudflare
-
-## 📝 Problem Statement
-**Goal:** Deploy the MERN-based TravelMemory app to AWS EC2, ensure frontend–backend communication, scale via an AWS Load Balancer, and expose a custom domain through Cloudflare with secure and resilient architecture.
-
-### 🔎 Introduction
-The TravelMemory application has been developed using the MERN stack. Your challenge is to deploy this application on an Amazon EC2 instance. This will provide hands-on experience in deploying full-stack applications, working with cloud platforms, and ensuring scalable architecture.
-
-### 📂 Project Repository
-Access the complete codebase:  
-👉 [TravelMemory GitHub Repository](https://github.com/UnpredictablePrashant/TravelMemory)
-
-### 🎯 Objectives
-- Set up the backend running on Node.js.  
-- Configure the frontend designed with React.  
-- Ensure efficient communication between frontend and backend.  
-- Deploy the full application on EC2.  
-- Facilitate load balancing with multiple instances.  
-- Connect a custom domain through Cloudflare.  
+## 📘 Project Description
+The project deploys a **Travel Memory application** using the MERN stack on AWS EC2 instances.  
+Key highlights:  
+- Separate **Application Load Balancers** for frontend and backend services  
+- **MongoDB Atlas** for database storage  
+- **Cloudflare DNS** for domain management and SSL integration  
+- Ensures **scalable architecture** with redundancy and high availability  
 
 ---
 
-## 🛠️ Tasks
-1. **Backend Configuration**  
-   - Clone repo → backend directory.  
-   - Backend runs on port 3000 → configure Nginx reverse proxy.  
-   - Update `.env` with DB connection + port info.  
-
-2. **Frontend & Backend Connection**  
-   - Update `urls.js` in frontend to point to backend.  
-
-3. **Scaling the Application**  
-   - Create multiple frontend/backend instances.  
-   - Add them to a load balancer.  
-
-4. **Domain Setup with Cloudflare**  
-   - CNAME → Load balancer endpoint.  
-   - A record → EC2 frontend IP.  
-
-5. **Documentation**  
-   - Detailed step-by-step guide with screenshots.  
-   - Deployment architecture diagram via [draw.io](https://www.draw.io/).  
+## ✅ Requirements
+1. MongoDB connection string  
+2. VPC with 2 public and 2 private subnets  
+3. AMI instance with prerequisites installed (Node.js, Nginx, Git)  
+4. Two EC2 instances for backend and two EC2 instances for frontend  
+5. Target Groups and Application Load Balancers for backend and frontend  
+6. A domain name to host the website on the internet  
 
 ---
 
-## 🚀 Steps to Resolve
+## 🏗 Architecture
+![Architecture Diagram](path-to-diagram)  
 
-### 1️⃣ Provision EC2 and Install Prerequisites
-#### 🖥️ Operating System & Packages
-- Ubuntu 22.04 LTS  
-- Nginx  
-- Node.js (v22 LTS)  
-- PM2  
-- Git  
+**Flow of the application:**  
+- End user opens browser → hits `https://www.yourdomain.com`  
+- DNS routes request to **Frontend ALB** (HTTPS, port 443)  
+- ALB performs health checks and distributes traffic across frontend EC2 instances  
+- Frontend communicates with backend via backend DNS (`url.js`)  
+- Request routed to **Backend ALB** (HTTPS, port 443)  
+- Backend ALB performs health checks and forwards to backend EC2 instances  
+- Backend communicates with **MongoDB Atlas** using connection string in `.env`  
+- Response flows back: MongoDB → Backend → Backend ALB → Frontend → Browser  
 
-#### 🌐 Security Group Configuration
-| Port | Purpose            |
-|------|--------------------|
-| 22   | SSH                |
-| 80   | HTTP               |
-| 443  | HTTPS              |
-| 3000 | Frontend (React)   |
-| 3001 | Backend (Node.js)  |
+> [!NOTE]  
+> Architecture diagram can be reused from [draw.io resources](https://github.com/vikramhemchandar/draw.io)
 
-#### 📋 Steps
-1. Log into **AWS Management Console** → EC2 Dashboard → Launch Instance.  
-2. Select **Ubuntu Server 20.04 LTS** (Free tier eligible).  
-3. Choose instance type: `t2.micro`.  
-4. Configure default VPC + public subnet.  
-5. Allocate storage (default 8 GB).  
-6. Configure Security Group with ports above.  
-7. Launch with a key pair for SSH access.  
+---
 
+## ⚙️ Backend Configuration
+
+### 1. Create a VPC (optional)
+- Create a dedicated VPC for deployment (not mandatory).  
+
+### 2. Launch EC2 Instance
+- OS: Ubuntu  
+- Type: `t3.micro`  
+- Network: selected VPC  
+- Subnet: public subnet  
+- Auto-assign public IP: Enabled  
+- Security group: allow SSH, HTTP, HTTPS, ports 3000 & 3001  
+
+📸 *[Screenshot Placeholder: EC2 instance creation]*  
+
+---
+
+### 3. Install Dependencies & Configure Nginx
+Update and upgrade OS packages:
 ```bash
-# Example SSH command
-ssh -i your-key.pem ubuntu@EC2_PUBLIC_IP
+sudo apt update && sudo apt upgrade -y
 ```
-> Screenshot: EC2 instance list  
-> Screenshot: Security group rules
 
----
-
-### 2️⃣ Update EC2 and Install Node.js 22
-SSH into your instance:
+Install and start Nginx:
 ```bash
-ssh -i your-key.pem ubuntu@EC2_PUBLIC_IP
+sudo apt install nginx -y
+sudo systemctl start nginx
+sudo systemctl enable nginx
 ```
 
-Update packages: ```sudo apt update && sudo apt upgrade -y```
+Configure reverse proxy (`/etc/nginx/sites-available/default`):
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+    
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
 
-Install Node.js 22 + npm:
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 10s;
+        proxy_send_timeout    60s;
+        proxy_read_timeout    60s;
+    }
+}
 ```
+
+Install Node.js:
+```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
-Verify installation:
+
+Clone repository:
+```bash
+git clone https://github.com/UnpredictablePrashant/TravelMemory
 ```
+
+Create `.env` file:
+```bash
+nano .env
+MONGO_URI='mongodb+srv://<user>:<password>@cluster.mongodb.net/travelmemory'
+PORT=3001
+```
+
+Reload Nginx:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+---
+
+### 4. Create AMI Image
+- Navigate to EC2 → Actions → Image and templates → Create image  
+📸 *[Screenshot Placeholder: AMI creation]*  
+
+---
+
+### 5. Scale EC2 Instances
+- Create 3 EC2 instances from AMI (total 4: 2 backend, 2 frontend)  
+- For now, create 2 backend instances  
+
+📸 *[Screenshot Placeholder: EC2 scaling]*  
+
+---
+
+### 6. Install NPM & Start Backend
+```bash
+cd TravelMemory/backend
+sudo npm install
+node index.js
+```
+
+Verify versions:
+```bash
 node -v
 npm -v
 ```
-Screenshot: Node.js and npm versions
 
 ---
 
-### 3️⃣ Configure MongoDB Atlas
+### 7. Verify Backend Server
+- Access `http://<public-ip>/` → should display backend message  
+- Access `http://<public-ip>/hello` → should return **Hello World**  
 
-1. Sign in to MongoDB Atlas.
-
-2. Create a free-tier cluster (M0) on AWS in your nearest region.
-
-3. Add Database User with read/write privileges.
-
-4. Configure Network Access: Allow from Anywhere (0.0.0.0/0) or restrict to EC2 IP.
-
-5. Download and install MongoDB Compass.
-
-6. Connect using URI:
-```
-mongodb+srv://<username>:<password>@cluster0.mongodb.net/travelmemory?retryWrites=true&w=majority
-```
-
-7. Create database travelmemory and collection trips.
-
-Screenshot: Atlas cluster dashboard 
-Screenshot: Compass showing travelmemory database
+📸 *[Screenshot Placeholder: Backend verification]*  
 
 ---
 
-### 4️⃣ Deploy Backend Application
+### 8. Create SSL Certificate with ACM
+- Navigate to **AWS Certificate Manager (ACM)**  
+- Request public certificate for domain(s)  
+- Add CNAME records in DNS provider (Cloudflare/Namecheap)  
+- Wait until ACM shows status as **Issued**  
 
-Clone the repository:
-```
-git clone https://github.com/UnpredictablePrashant/TravelMemory.git
-cd TravelMemory/backend
-```
-
-Create .env file:
-```
-MONGO_URI='mongodb+srv://<username>:<password>@cluster0.mongodb.net/travelmemory?retryWrites=true&w=majority'
-PORT=3001
-JWT_SECRET=<your_secret>
-CLIENT_ORIGIN=http://EC2_PUBLIC_IP:3000
-```
-Install dependencies: 
-``` npm install ```  
-
-Run backend server: 
-```node index.js ```
-
-Test API endpoint: 
-```http://EC2_PUBLIC_IP:3001/hello```   
-
-** Expected output: ** Hello World
-
-Screenshot: .env file (redacted) Screenshot: Browser showing Hello World
+📸 *[Screenshot Placeholder: ACM certificate request & validation]*  
 
 ---
 
-### 5️⃣ Deploy Frontend Application
-Navigate to frontend folder:
-```cd TravelMemory/frontend```
+### 9. Create Target Group & Backend ALB
+**Target Group:**  
+- Type: Instances  
+- Protocol: HTTP  
+- Port: 80  
+- Health check: `/hello`  
+- Register backend EC2 instances  
 
-Create .env file:
-```echo "REACT_APP_BACKEND_URL=http://EC2_PUBLIC_IP:3001" > .env```
+**Application Load Balancer:**  
+- Type: Application Load Balancer  
+- Scheme: Internet-facing  
+- Listener: HTTPS (443)  
+- SSL Certificate: ACM-issued certificate  
+- Forward traffic to backend target group  
 
-Install dependencies:
-```npm install```
+📸 *[Screenshot Placeholder: Backend ALB creation]*  
 
-Run React app:
-```npm start```
+**Test:**  
+- Access `https://<backend-alb-dns>/hello` → should return **Hello World**  
 
-Access frontend:
-``` http://EC2_PUBLIC_IP:3000 ```
+**DNS Mapping:**  
+- Add CNAME record in Cloudflare:  
+  - Type: CNAME  
+  - Host: `backend`  
+  - Value: `<backend-alb-dns>`  
 
-Screenshot: Frontend homepage in browser
+📸 *[Screenshot Placeholder: Cloudflare DNS entry]*  
+
+**Backend is now accessible at:**  
+`https://backend.yourdomain.com`
+
+---
+Got it 👍 — here’s the **Frontend Deployment section** polished and formatted to match the backend style we already completed.  
 
 ---
 
-### 6️⃣ Next Steps (Production Deployment)
+## 🎨 Frontend Configuration
 
-1. Nginx Reverse Proxy: Serve React build (npm run build) + proxy backend requests.
+### 1. Provision EC2 Instances
+- Launch **2 EC2 instances** for frontend using the AMI created earlier  
+- Configuration:  
+  - OS: Ubuntu  
+  - AMI: Select the custom AMI with pre-installed dependencies  
+  - Network: Select created VPC  
+  - Subnet: Public subnet  
+  - Auto-assign public IP: Enabled  
+  - Security group: allow SSH, HTTP, HTTPS, ports 3000 & 3001  
 
-2. Load Balancer: Create AWS Application Load Balancer, register multiple EC2 instances, configure health checks (/hello).
-
-3. Cloudflare DNS:
-      - CNAME api.yourdomain.com → ALB DNS name.
-
-      - A record yourdomain.com → EC2 public IP (or frontend ALB).
-
-4. TLS Certificates: Use AWS ACM + Cloudflare Full/Strict mode.
-
-Screenshot: ALB target group health check Screenshot: Cloudflare DNS records
-
----
-
-Implementations
-
-Backend .env
-```
-MONGO_URI='mongodb+srv://<username>:<password>@cluster0.mongodb.net/travelmemory?retryWrites=true&w=majority'
-PORT=3001
-JWT_SECRET=<your_secret>
-CLIENT_ORIGIN=http://EC2_PUBLIC_IP:3000
-```
-
-Frontend .env
-```
-REACT_APP_BACKEND_URL=http://EC2_PUBLIC_IP:3001
-```
+📸 *[Screenshot Placeholder: Frontend EC2 creation]*  
 
 ---
 
-## Implementations
+### 2. Configure `url.js` for Backend Communication
+- Navigate to `TravelMemory/frontend/src`  
+- Edit `url.js` to point to backend ALB DNS  
 
-### Backend PM2
-```
-pm2 start server.js --name travelmemory-backend
-pm2 save
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u $USER --hp $HOME
-```
-
-### Nginx backend (reverse proxy)
-```
-server {
-  listen 80;
-  server_name api.yourdomain.com;
-  location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-}
+```js
+export const baseUrl = process.env.REACT_APP_BACKEND_URL || "https://backend.yourdomain.com";
 ```
 
-### Nginx frontend (static hosting)
-```
-server {
-  listen 80;
-  server_name yourdomain.com www.yourdomain.com;
-  root /var/www/travelmemory;
-  index index.html;
+📸 *[Screenshot Placeholder: url.js configuration]*  
 
-  location / {
-    try_files $uri /index.html;
-  }
-}
-```
-
-### Frontend urls.js
-``` -javascript-
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
-export const ENDPOINTS = {
-  AUTH_LOGIN: `${API_BASE}/auth/login`,
-  AUTH_REGISTER: `${API_BASE}/auth/register`,
-  TRIPS: `${API_BASE}/trips`,
-};
-```
 ---
 
-## Learnings from the assignment
-- Separation of concerns: Nginx handles public traffic and static files; Node handles API logic behind a proxy.
+### 3. Install NPM & Start Frontend
+Run commands on both frontend EC2 instances:
 
-- Environment-driven builds: React reads REACT_APP_* vars at build time—bake correct API URL for production.
+```bash
+cd TravelMemory/frontend
+sudo npm install
+npm start
+```
 
-- Health checks matter: Simple endpoints like /hello or /health let ALB judge instance health and keep traffic resilient.
+Verify versions:
+```bash
+node -v
+npm -v
+```
 
-- DNS correctness: CNAME for LB endpoints; A records for direct instance IPs (or use CNAME if frontend is also behind ALB).
+📸 *[Screenshot Placeholder: Frontend npm start]*  
 
-- Security posture: Terminate TLS at ALB with ACM, never expose Node directly, keep secrets off Git, and restrict SG ingress.
+---
 
-  ---
+### 4. Create SSL Certificate with ACM
+- Navigate to **AWS Certificate Manager (ACM)**  
+- Request public certificate for `www.yourdomain.com`  
+- Add CNAME records in DNS provider (Cloudflare/Namecheap)  
+- Wait until ACM shows status as **Issued**  
 
-## Deep-dive links
-- AWS ALB basics and target groups: Official AWS docs (search “Application Load Balancer user guide”)
+📸 *[Screenshot Placeholder: ACM certificate for frontend]*  
 
-- Nginx reverse proxy best practices: Nginx docs (search “nginx reverse proxy headers”)
+---
 
-- React env vars (REACT_APP_*): CRA documentation
+### 5. Create Target Group & Frontend ALB
+**Target Group:**  
+- Type: Instances  
+- Protocol: HTTP  
+- Port: 80  
+- Health check: `/` (root path)  
+- Register frontend EC2 instances  
 
-- MongoDB Atlas IP allowlist and connection strings: MongoDB Atlas docs
+**Application Load Balancer:**  
+- Type: Application Load Balancer  
+- Scheme: Internet-facing  
+- Listener: HTTPS (443)  
+- SSL Certificate: ACM-issued certificate  
+- Forward traffic to frontend target group  
 
-- Cloudflare DNS and SSL modes: Cloudflare docs (search “Full vs Full (Strict)”)
+📸 *[Screenshot Placeholder: Frontend ALB creation]*  
 
-- Assignment portal and repository references used for task scope and links. Public validation pages referenced for example outputs during deployment54.183.207.178+1.
+**Test:**  
+- Access `https://<frontend-alb-dns>` → should load React app homepage  
 
+---
+
+### 6. DNS Mapping
+- Add CNAME record in Cloudflare:  
+  - Type: CNAME  
+  - Host: `www`  
+  - Value: `<frontend-alb-dns>`  
+
+📸 *[Screenshot Placeholder: Cloudflare DNS entry for frontend]*  
+
+**Frontend is now accessible at:**  
+`https://www.yourdomain.com`
+
+---
+
+✅ Congratulations this completes the **Frontend Deployment section**.  
