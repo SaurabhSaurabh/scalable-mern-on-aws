@@ -48,7 +48,7 @@ This architecture demonstrates a scalable cloud-native MERN deployment on AWS wi
 - Response flows back: MongoDB → Backend → Backend ALB → Frontend → Browser  
 
 > [!NOTE]  
-> Architecture diagram can be reused from [draw.io resources](https://github.com/SaurabhSaurabh/scalable-mern-on-aws/tree/main/drawio-resources/scalable-MERN-on-AWS-architecture.io)
+> Architecture diagram can be reused from [draw.io resources](https://app.diagrams.net/#G1YhqzfDXSE9NYg-ba-BrBCQPfGAHISPRf#%7B%22pageId%22%3A%22EiVrsQ4DKojfplwy1NJh%22%7D)
 
 ---
 
