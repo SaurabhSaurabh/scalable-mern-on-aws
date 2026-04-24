@@ -25,7 +25,16 @@ Key highlights:
 
 ---
 
-## 🏗 Architecture
+## 🏗 Architecture Overview
+
+This architecture demonstrates a scalable cloud-native MERN deployment on AWS with:
+
+- Cloudflare for DNS and SSL termination
+- Application Load Balancers (Frontend & Backend)
+- Auto Scaling EC2 instances
+- Private subnet isolation for backend services
+- External MongoDB Atlas integration
+
 ![Scalable MERN on AWS Architecture](screenshots/scalable-mern-on-aws-architecture.png)
 
 **Flow of the application:**  
